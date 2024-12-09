@@ -322,8 +322,10 @@ public class EventHandler {
         if (isNear(45, 4, 2) && gp.keyH.enterPressed) {
             // Set the game state to dialogue state
             gp.gameState = gameState;
+            gp.player.attackCanceled = true;
+            gp.playSE(9);
             gp.ui.currentDialogue = "You have taken a sip from this\n mysterious fountain. Fortunately, it \nfills you with vitality.";
-
+            
             // Heal the player
             int maxLife = gp.player.maxLife;
             gp.player.life = Math.min(gp.player.life + 1, maxLife);

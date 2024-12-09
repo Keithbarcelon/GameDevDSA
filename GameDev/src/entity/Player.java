@@ -14,6 +14,7 @@ public class Player extends Entity {
     public final int screenX;
     public final int screenY;
     int standCounter = 0;
+    public boolean attackCanceled = false;
     
     // Health attributes
     private int health; // Current health
@@ -121,6 +122,15 @@ public class Player extends Entity {
                     case "right": worldX += speed; break;
                 }
             }
+            
+            if (keyH.enterPressed == true && attackCanceled == false) {
+            	gp.playSE(6);
+            	attacking = true;
+            	spriteCounter = 0;
+            }
+            
+            attackCanceled = false;
+            gp.keyH.enterPressed = false;
 
             // Update sprite for animation
             spriteCounter++;
@@ -209,11 +219,12 @@ public class Player extends Entity {
     public void interactNPC(int i) {
         if (gp.keyH.enterPressed == true) {
             if (i != 999) {
+            	attackCanceled = true;
                 gp.gameState = gp.dialogueState; // Change game state to dialogue
                 gp.npc[i].speak(); // Call the speak method on the NPC
             } else {
             	gp.playSE(6);
-                attacking = true; // Start attacking if no NPC is interacted with
+            	attacking = true;
             }
         }
         gp.keyH.enterPressed = false;
