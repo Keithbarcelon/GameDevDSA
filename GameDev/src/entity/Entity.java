@@ -36,12 +36,14 @@ public class Entity {
     boolean attacking = false; 
     public boolean alive = true;
     public boolean dying = false;
+    public boolean hpBarOn = false;
      
     //COUNTER
     public int spriteCounter = 0;
     public int actionLockCounter = 0;
     public int invincibleCounter = 0;
     int dyingCounter = 0;
+    public int hpBarCounter = 0;
     
     // CHARACTER STATUS
     public String name;
@@ -56,6 +58,9 @@ public class Entity {
 
     public void setAction() {
         // Override in subclasses
+    }
+    public void damageReaction() {
+    	// Override in slime class
     }
 
     public void speak() {
@@ -117,6 +122,7 @@ public class Entity {
                     break;
             }
         }
+        
     }
 
     public void draw(Graphics2D g2) {
@@ -153,29 +159,65 @@ public class Entity {
                 }
             }
             
-            
-
+           
             // Calculate offsets for non-standard sprite sizes (e.g., attack sprites)
             int drawWidth = image.getWidth();   // Use the sprite's width
             int drawHeight = image.getHeight(); // Use the sprite's height
             int drawX = screenX - (drawWidth - gp.tileSize) / 2; // Center horizontally
             int drawY = screenY - (drawHeight - gp.tileSize);    // Adjust vertically for taller sprites
 
-            // Debugging: Draw a red bounding box for visual validation
-            g2.setColor(Color.RED);
-            g2.drawRect(drawX, drawY, drawWidth, drawHeight);
-
+            
+            // MONSTER HP BAR
+            if (type == 2 && hpBarOn == true) {
+            
+            double oneScale = (double)gp.tileSize/maxLife;
+            double hpBarValue = oneScale*life;
+            	
+            g2.setColor(new Color(35, 35, 35));
+            g2.fillRect(screenX - 1, screenY - 16, gp.tileSize+2, 12);
+            
+            g2.setColor(new Color(255, 0, 30));
+            g2.fillRect(screenX, screenY - 15, (int)hpBarValue, 10);
+            
+            hpBarCounter++;
+            if(hpBarCounter > 600) {
+            	hpBarCounter = 0;
+            	hpBarOn = false;
+            	}
+            }
+            
+            if (invincible == true) {
+            	hpBarOn = true;
+    			hpBarCounter = 0;
+            }
+            if (dying == true) {
+            	dyingAnimation(g2);
+            }
             // Draw the image
             g2.drawImage(image, drawX, drawY, drawWidth, drawHeight, null);
+            
+            changeAlpha(g2, 1f);
         }
         
         
-        if (dying == true) {
-        	dyingAnimation(g2);
-        }
+        
     }
     
- public void dyingAnimation(Graphics2D g2) {
+ 
+    
+    public void changeAlpha(Graphics2D g2, float alphaValue) {
+    	g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaValue));
+    }
+    
+
+    private boolean isInView() {
+        return worldX + gp.tileSize > gp.player.worldX - gp.player.screenX &&
+               worldX - gp.tileSize < gp.player.worldX + gp.player.screenX &&
+               worldY + gp.tileSize > gp.player.worldY - gp.player.screenY &&
+               worldY - gp.tileSize < gp.player.worldY + gp.player.screenY;
+    }
+    
+public void dyingAnimation(Graphics2D g2) {
     	
     	dyingCounter++;
     	int i = 5;
@@ -188,22 +230,11 @@ public class Entity {
     	if (dyingCounter > i*6 && dyingCounter <= i*7) {changeAlpha(g2, 0f); }
     	if (dyingCounter > i*7 && dyingCounter <= i*8) {changeAlpha(g2, 1f); }
     	if(dyingCounter > i*8) {
+    		gp.playSE(8);
     		dying = false;
     		alive = false;
     	}
     	
-    }
-    
-    public void changeAlpha(Graphics2D g2, float alphaValue) {
-    	g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaValue));
-    }
-    
-
-    private boolean isInView() {
-        return worldX + gp.tileSize > gp.player.worldX - gp.player.screenX &&
-               worldX - gp.tileSize < gp.player.worldX + gp.player.screenX &&
-               worldY + gp.tileSize > gp.player.worldY - gp.player.screenY &&
-               worldY - gp.tileSize < gp.player.worldY + gp.player.screenY;
     }
 
     public BufferedImage setup(String imagePath, int width, int height) {
